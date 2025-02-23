@@ -3,10 +3,13 @@ import UniversityCard from "../components/UniversityCard";
 import SwipeButtons from "../components/SwipeButtons";
 import { fetchRandomUniversity } from "../services/universityService";
 import { fetchUniversityImage } from "../services/wikimediaService";
+import { saveLikedUniversity } from "../services/firebaseService";
+import { useNavigate } from "react-router-dom";
 
 const Home: React.FC = () => {
   const [university, setUniversity] = useState<any>(null);
   const [imageUrl, setImageUrl] = useState<string>("");
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchNewUniversity();
@@ -16,11 +19,16 @@ const Home: React.FC = () => {
     const randomUni = await fetchRandomUniversity();
     if (randomUni) {
       setUniversity(randomUni);
-
-      // Fetch university image from Unsplash
       const image = await fetchUniversityImage(randomUni["school.name"]);
       setImageUrl(image);
     }
+  };
+
+  const handleSwipeRight = async () => {
+    if (university) {
+      await saveLikedUniversity(university); // Save to Firestore
+    }
+    fetchNewUniversity();
   };
 
   return (
@@ -39,10 +47,9 @@ const Home: React.FC = () => {
         <p>Loading university...</p>
       )}
 
-      <SwipeButtons onSwipeLeft={fetchNewUniversity} onSwipeRight={fetchNewUniversity} />
+      <SwipeButtons onSwipeLeft={fetchNewUniversity} onSwipeRight={handleSwipeRight} />
     </div>
   );
 };
 
 export default Home;
-
